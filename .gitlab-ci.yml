@@ -1,0 +1,44 @@
+
+stages:
+  - build
+  - deploy
+
+
+
+variables:
+  AWS_DEFAULT_REGION: us-east-2         # The region of our S3 bucket
+  BUCKET_NAME: zach-hugo-test-bucket    # Your bucket name
+  GIT_SUBMODULE_STRATEGY: recursive
+  BASE_URL: https://zach-hugo-test-bucket.s3-website.us-east-2.amazonaws.com
+
+# ---- Build Stage ------
+buildHugo: 
+  stage: build
+  only: 
+  - master
+  image: monachus/hugo
+  script:
+    - hugo
+  artifacts:
+    paths:
+      - dist
+
+deployS3:
+  stage: deploy
+  only: 
+  - master
+  environment:
+    name: production
+    url: $BASE_URL
+  image: garland/aws-cli-docker
+  script: 
+  - aws s3 sync ./public s3://$BUCKET_NAME --delete
+
+
+
+  # stage: deploy
+  # image: python:latest
+  # script:
+  # - pip install awscli
+  # - aws s3 cp ./ s3://$BUCKET_NAME/ --recursive --exclude "*" --include "*.html"
+
